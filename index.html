@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Simulador Examen - Universidad Europea</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Helvetica Neue', sans-serif;
+      background-color: #ffffff;
+      color: #000000;
+      margin: 0;
+      padding: 0;
+    }
+    h1, h2, h3 {
+      color: #E2001A;
+    }
+    button {
+      transition: background-color 0.3s ease;
+    }
+    #inicio, #examen, #resultado {
+      max-width: 700px;
+      margin: auto;
+      padding: 20px;
+    }
+    .opcion {
+      display: block;
+      width: 100%;
+      padding: 12px 20px;
+      background-color: #f3f3f3;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: left;
+    }
+    .opcion:hover {
+      background-color: #ffe5e5;
+    }
+    #btn-siguiente {
+      margin-top: 20px;
+    }
+    #resultado {
+      margin-top: 30px;
+    }
+    #cronometro {
+      color: #E2001A;
+    }
+    @media (max-width: 600px) {
+      #inicio, #examen, #resultado {
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body class="bg-white text-black font-sans">
+    <!-- Encabezado -->
+  <header class="text-center my-6">
+    <img src="https://drive.google.com/thumbnail?id=153up9_hKAejh-DhbRN8J0Fy97guD6l7D" alt="Universidad Europea" class="mx-auto w-48 mb-4">
+    <h1 class="text-3xl font-bold">Simulador de Examen</h1>
+    <p class="text-lg">Asignatura: <strong>Deportes de Raqueta I</strong></p>
+    <p class="text-lg mb-2">Profesor: <strong>Jesús Aceituno D.</strong></p>
+  </header>
+
+  <!-- Pantalla de inicio -->
+  <section id="inicio" class="text-center my-10">
+    <h2 class="text-2xl mb-4">Bienvenido al simulador</h2>
+    <button onclick="comenzarExamen()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded">
+      Comenzar Simulacro
+    </button>
+  </section>
+
+  <!-- Pantalla de preguntas -->
+  <section id="examen" class="hidden">
+    <div class="flex justify-between items-center px-4">
+      <div id="pregunta-contador" class="text-lg font-semibold"></div>
+      <div id="cronometro" class="text-lg font-semibold"></div>
+    </div>
+    <div class="p-6">
+      <h2 id="pregunta-texto" class="text-xl font-bold mb-6"></h2>
+      <div id="opciones" class="space-y-4"></div>
+    </div>
+    <div class="text-center mt-6">
+      <button onclick="siguientePregunta()" id="btn-siguiente" class="hidden bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded">
+        Siguiente
+      </button>
+    </div>
+  </section>
+
+  <!-- Pantalla de resultado -->
+  <section id="resultado" class="hidden text-center my-10">
+    <h2 id="resultado-titulo" class="text-3xl font-bold mb-4"></h2>
+    <p id="resultado-detalle" class="text-lg mb-6"></p>
+    <button onclick="reiniciarExamen()" class="bg-black hover:bg-gray-800 text-white font-bold py-2 px-6 rounded">
+      Repetir Examen
+    </button>
+  </section>
+
+<script>
+// Variables globales
+let preguntas = [];
+let preguntaActual = 0;
+let correctas = 0;
+let cronometro;
+let segundos = 0;
+
+// Base de preguntas (ejemplo de 5, luego puedes completar más)
+const basePreguntas = [
+  {
+    pregunta: "¿Cuántos sets debe ganar un jugador para ganar un partido de Grand Slam (masculino)?",
+    opciones: ["2", "3", "4", "5", "1"],
+    respuestaCorrecta: "3"
+  },
+  {
+    pregunta: "¿En qué país se originó el tenis moderno?",
+    opciones: ["España", "Francia", "Inglaterra", "Italia", "Estados Unidos"],
+    respuestaCorrecta: "Inglaterra"
+  },
+  {
+    pregunta: "¿Verdadero o Falso? El pádel se juega siempre en parejas.",
+    opciones: ["Verdadero", "Falso"],
+    respuestaCorrecta: "Verdadero"
+  },
+  {
+    pregunta: "¿Cuál es el nombre del organismo mundial que regula el tenis profesional?",
+    opciones: ["ITF", "FIFA", "ATP", "WTA", "NBA"],
+    respuestaCorrecta: "ITF"
+  },
+  {
+    pregunta: "¿Cómo se llama el golpe que se hace por encima de la cabeza en tenis?",
+    opciones: ["Volea", "Revés", "Drive", "Smash", "Saque"],
+    respuestaCorrecta: "Smash"
+  }
+];
+
+// Función para comenzar el examen
+function comenzarExamen() {
+  document.getElementById('inicio').classList.add('hidden');
+  document.getElementById('examen').classList.remove('hidden');
+  cargarPreguntas();
+  mostrarPregunta();
+  iniciarCronometro();
+}
+
+// Cargar 20 preguntas aleatorias
+function cargarPreguntas() {
+  preguntas = [...basePreguntas].sort(() => Math.random() - 0.5).slice(0, 20);
+}
+
+// Mostrar una pregunta
+function mostrarPregunta() {
+  const pregunta = preguntas[preguntaActual];
+  document.getElementById('pregunta-texto').innerText = pregunta.pregunta;
+  const opcionesDiv = document.getElementById('opciones');
+  opcionesDiv.innerHTML = '';
+
+  pregunta.opciones.forEach(opcion => {
+    const boton = document.createElement('button');
+    boton.innerText = opcion;
+    boton.className = "opcion";
+    boton.onclick = () => seleccionarOpcion(opcion);
+    opcionesDiv.appendChild(boton);
+  });
+
+  document.getElementById('pregunta-contador').innerText = `Pregunta ${preguntaActual + 1} de 20`;
+  document.getElementById('btn-siguiente').classList.add('hidden');
+}
+
+// Seleccionar una respuesta
+function seleccionarOpcion(seleccion) {
+  const correcta = preguntas[preguntaActual].respuestaCorrecta;
+  if (seleccion === correcta) {
+    correctas++;
+  }
+  document.querySelectorAll('.opcion').forEach(btn => btn.disabled = true);
+  document.getElementById('btn-siguiente').classList.remove('hidden');
+}
+
+// Siguiente pregunta
+function siguientePregunta() {
+  preguntaActual++;
+  if (preguntaActual < 20) {
+    mostrarPregunta();
+  } else {
+    terminarExamen();
+  }
+}
+
+// Terminar el examen
+function terminarExamen() {
+  clearInterval(cronometro);
+  document.getElementById('examen').classList.add('hidden');
+  document.getElementById('resultado').classList.remove('hidden');
+
+  const porcentaje = Math.round((correctas / 20) * 100);
+  const aprobado = porcentaje >= 75;
+
+  document.getElementById('resultado-titulo').innerText = aprobado ? "🎉 ¡Aprobado!" : "❌ No Aprobado";
+  document.getElementById('resultado-detalle').innerHTML = `
+    Aciertos: ${correctas}/20<br>
+    Calificación: ${porcentaje}%
+  `;
+}
+
+// Reiniciar el examen
+function reiniciarExamen() {
+  preguntaActual = 0;
+  correctas = 0;
+  segundos = 0;
+  document.getElementById('resultado').classList.add('hidden');
+  document.getElementById('inicio').classList.remove('hidden');
+}
+
+// Cronómetro hacia adelante
+function iniciarCronometro() {
+  cronometro = setInterval(() => {
+    segundos++;
+    const min = Math.floor(segundos / 60).toString().padStart(2, '0');
+    const sec = (segundos % 60).toString().padStart(2, '0');
+    document.getElementById('cronometro').innerText = `${min}:${sec}`;
+  }, 1000);
+}
+</script>
+
+</body>
+</html>
